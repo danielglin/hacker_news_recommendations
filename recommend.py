@@ -1,5 +1,7 @@
 from nltk.tag import pos_tag
 from nltk.tokenize import word_tokenize
+import nltk
+import polars as pl
 import requests
 
 
@@ -57,7 +59,7 @@ def count_overlap(l_bio_nouns, headline):
     s_headline_tokens = set(l_headline_tokens)
     s_bio_nouns = set(l_bio_nouns)
     overlapping_tokens = s_headline_tokens.intersection(s_bio_nouns)
-    return len(overlapping_tokens)   
+    return len(overlapping_tokens)  
 
 
 def get_top_headlines():
@@ -83,3 +85,37 @@ def get_top_headlines():
         top_headlines.append(story_req.json()['title'])
 
     return top_headlines
+
+
+def rank_headlines(bio, headlines):
+    """
+    Ranks headlines for a bio
+    
+    PARAMETERS:
+        - bio (str): user bio to base rankings off of
+        - headlines (list of str): headlines to rank
+        
+    RETURNS:
+        - df_rank (polars.DataFrame): DataFrame with headlines in the
+            'headlines' column and ranking in the 'rank' column
+    """
+    df_rank = pl.DataFrame({
+        'headlines': headlines
+    })
+    
+    # pre-process the bio
+    stopwords = nltk.corpus.stopwords.words('english')
+    l_bio_nouns = preprocess_bio(bio, stopwords)
+
+    # calculate each headlines' score
+    df_rank = df_rank.with_columns(
+        pl.col('headlines').map_elements(lambda h: count_overlap(l_bio_nouns, h)).alias('scores')
+    )    
+    
+    # rank based off the score
+    df_rank = df_rank.with_columns(
+        pl.col('scores').rank(method='min', descending=True).alias('rank')
+    )
+    df_rank = df_rank.drop('scores')
+    df_rank = df_rank.sort(by='rank')
+    return df_rank    

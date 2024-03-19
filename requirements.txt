@@ -1,4 +1,4 @@
-# haxor==1.2.4
+gradio==4.21.0
 nltk==3.8.1
 polars==0.20.15
 # spacy==3.7.4

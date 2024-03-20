@@ -3,6 +3,7 @@ import nltk
 from recommend import get_top_headlines, rank_headlines
 
 nltk.download('stopwords')
+nltk.download('punkt')
 stopwords = nltk.corpus.stopwords.words('english')
 top_headlines = get_top_headlines()
 

@@ -2,6 +2,7 @@ import gradio as gr
 import nltk
 from recommend import get_top_headlines, rank_headlines
 
+nltk.download('stopwords')
 stopwords = nltk.corpus.stopwords.words('english')
 top_headlines = get_top_headlines()
 
